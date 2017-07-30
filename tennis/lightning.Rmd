@@ -1,0 +1,266 @@
+---
+title: "Sports Analytics: Emotions in tennis"
+author: 
+  - Stephanie Kobakian
+  - Mitchell O'Hara-Wild
+date: 2nd June 2017
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["default", "custom.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: center, top
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+.bgquote[.bigtxt[
+_Tennis is mostly mental._
+]
+.medtxt[
+_You win or lose the match before you even go out there._
+]]
+
+.right[
+\- Serena Williams
+]
+
+--
+
+![Serena GIF](img/serenaWilliams.gif)
+
+???
+
+# Motivation
+
+## We want to understand emotion to determine how it impacts the play of a game. 
+
+---
+
+# How can we collect emotion data?
+
+--
+
+## Should we ask the players?
+    
+--
+
+.center[
+### Not feasible
+]
+
+???
+
+We can't interrupt the match to ask how they're feeling after every point.
+  
+--
+
+.center[
+### Questionable self-reporting accuracy
+]
+
+???
+
+Intentional / unintentional self reporting of emotions. Different players may verbalise emotions differently.
+
+--
+
+
+
+## Instead, predict their emotion visually
+
+---
+class: inverse, center, bottom
+background-image: url(img/court.png)
+background-size: cover
+
+# Broadcast videos
+
+---
+
+
+# Commercial services
+
+--
+
+.center[
+.logo[
+![google](img/google.png)
+]
+]
+
+--
+
+.center[
+.logo[
+![microsoft](img/microsoft.png)
+]
+]
+
+--
+
+.center[
+.logo[
+![skybiometry](img/skybiometry.png)
+]
+]
+
+---
+
+
+# Face detection
+
+![detect](img/CrowdRecognition.png)
+
+???
+
+easy, has been used to focus cameras and count populations for many years.
+
+---
+
+# Emotion detection
+
+
+![facerec](img/facialrecognition.jpg)
+
+???
+
+Much more difficult, more recent development
+
+Facial landmarks are used to produce a mesh that describes facial features, such as a raised eyebrow or open mouth.
+These positions can be passed into a NN to predict emotions.
+
+---
+class: inverse, center, top
+
+# How do we define emotion via expression?
+
+--
+
+![emotions](img/emotions.gif)
+
+???
+
+Paul Ekman is a psychologist who is a pioneer in the study of emotions and their relation to facial expressions.
+He helped Pixar develop the characters for Inside Out! :)
+
+---
+class: center, middle
+
+# Sample emotion classifications
+
+![face emotions](img/ExampleEmotions.png)
+
+---
+class: inverse, center, top
+
+# Great! 
+
+--
+
+## We've classified emotions from faces!
+
+![success](img/success.gif)
+
+---
+class: inverse, center, top
+
+# But wait...
+
+--
+
+## How accurate are they?
+
+![shrug](img/shrug.gif)
+
+---
+
+# Emotion classification preferences
+
+![bias](img/NeutralHistograms.png)
+
+---
+class: center
+
+# Individual baseline expressions
+
+--
+
+### Some players usually appear surprised
+![sameface](img/face-1635-1-Go.png)
+![sameface](img/face-1636-1-Go.png)
+![sameface](img/face-1639-1-Go.png)
+
+???
+
+Alize Cornet
+
+--
+
+### Others may typically appear angry
+
+![sameface](img/anger2.png)
+![sameface](img/anger2.png)
+
+
+???
+
+Gilles Simon
+
+---
+class: center
+
+# Individual baseline expressions
+
+## Players express their emotions in different ways
+
+???
+
+# Consider deviation from average expression
+
+### Key area for improvement is improving robustness to individual expressions
+
+
+---
+# Additional challenges
+
+--
+
+.center[
+## Clothing accessories
+]
+
+--
+
+.center[
+## Face angle to the camera
+]
+
+---
+class: inverse, center, middle
+
+# Emotions are hard
+
+![Inside out](img/insideout.gif)
+
+---
+
+### Reliable emotions allow creation of usable timelines of emotion against performance
+
+---
+class: inverse, center
+background-image: url(img/bg3.png)
+background-size: cover
+
+# Questions?
+
+---
+class: inverse, center, middle
+
+![bye!](img/bye.gif)

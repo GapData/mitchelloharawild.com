@@ -1,0 +1,38 @@
+.bigtxt {
+  font-size: 3em;
+}
+
+.medtxt {
+  font-size: 1.25em;
+}
+
+.bgquote {
+  background-color: #e3fbfc;
+}
+
+
+.colmd3 {
+  float: left;
+  width: 32%;
+  text-align: center;
+}
+
+.logo img{
+  width:50%;
+}
+
+.title-slide{
+  background-image: url("img/bg3.png");
+}
+
+.title-slide h1{
+  padding-bottom: 6.2em;
+}
+
+.title-slide h3{
+  margin: 10px;
+}
+
+.faceimg img{
+  width: 50%;
+}

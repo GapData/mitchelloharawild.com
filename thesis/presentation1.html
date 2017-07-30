@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Models for forecasting multiple seasonality</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Mitchell O’Hara-Wild" />
+    <meta name="date" content="2017-07-05" />
+    <link href="libs/remark-css/example.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Models for forecasting multiple seasonality
+### Mitchell O’Hara-Wild
+### 07/05/2017
+
+---
+
+
+
+
+## What is multiple seasonality?
+
+???
+
+My topic area for my honours research project is forecasting multiple seasonality.
+
+We aim to compare the currently used methods, and develop a new model to better handle these patterns
+
+Seasonality is a *regular* pattern which repeats over some fixed period of time
+
+Multiple seasonality is two or more of these seasonal patterns.
+
+For example:
+
+--
+![](presentation1_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+???
+
+
+Two types of seasonality is present:
+- Daily seasonality
+- Hourly seasonality
+
+They interact as the hourly pattern changes depending on if it is a weekday, or weekend.
+
+This forms a complex pattern to model
+
+---
+
+## What is multiple seasonality?
+
+![](presentation1_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+???
+
+Systems which were previously observed daily, can now be measured hourly, revealing these patterns of multiple seasonality.
+
+The availability of multiple seasonal time series data is growing rapidly as sensors that are capable of recording more data, more often become commonplace. 
+
+
+Requiring accurate MSTS modelling is essential for understanding and predicting these complex systems
+
+
+---
+class: inverse, center, middle
+
+# Where is multiple seasonality found?
+
+---
+class: inverse, center, top
+background-image: url(resources/utility.jpg)
+background-size: cover
+
+# Utilities
+
+???
+
+Go through revealing list
+
+---
+class: inverse, center, top
+background-image: url(resources/traffic.jpg)
+background-size: cover
+
+# Transportation
+
+---
+
+class: inverse, center, top
+background-image: url(resources/electronics.jpg)
+background-size: cover
+
+# Consumer electronics
+
+---
+
+class: inverse, center, top
+background-image: url(resources/health.jpg)
+background-size: cover
+
+#  Health
+
+---
+
+class: inverse, center, top
+background-image: url(resources/everywhere.jpg)
+background-size: cover
+
+#  Everywhere!
+
+???
+
+Multiple seasonality is evident in all systems involving humans, as humans have daily routines which vary between weekdays and weekends.
+
+So, which datasets am I using for this research?...
+
+
+---
+class: inverse, center, middle
+
+# Research datasets
+
+???
+
+So, which datasets am I using for this research?...
+
+---
+class: inverse, center, bottom
+
+background-image: url(resources/pedestrian.jpeg)
+background-size: cover
+
+# Pedestrian counts
+
+???
+
+43 sensor locations located around our city, which have been providing hourly counts of pedestrians since 2009 (almost 2 million observations!)
+
+Valuable for **understanding** and forecasting pedestrian traffic is valuable for **urban planning, event management and business development**
+
+Lots of data allows models to be tested at scale.
+
+---
+
+# Pedestrian counts
+
+![](presentation1_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+
+???
+
+Strong multiple seasonal pattern
+
+Holiday effects (Easter, point to graph)
+
+---
+class: inverse, center, top
+
+background-image: url(resources/electricity.jpeg)
+background-size: cover
+
+# Electricity demand
+
+???
+
+Half-hourly smart meter electricity demand data from Victoria
+
+---
+
+# Electricity demand
+
+![](presentation1_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+???
+
+Driven by the **covariate temperature**
+
+Being able to accurately forecast electricity generation need is beeficial for the **environment**, **costs** and **preventing black-outs**
+
+---
+
+# Multiple seasonal models
+
+### The ideal model is:
+
+???
+
+So what makes a good model for forecasting multiple seasonality time series?
+
+--
+
+.center[
+## Accurate
+]
+
+???
+
+Pretty self explanatory, model accuracy is highly desirable. Doesn't require any further justification :)
+
+--
+
+.center[
+## Flexible
+]
+
+???
+
+Model specification should be flexible to suit a wide range of data applications. A tuned specification reduces the parameterisation problem.
+
+--
+
+.center[
+## Fast
+]
+
+???
+
+The model should produce estimates in a reasonable amount of time
+
+--
+
+.center[
+## Robust
+]
+
+???
+
+The model should not be sensitive to outliers or noise.
+
+---
+class: inverse, center, middle
+
+# Regression models
+
+???
+
+I think it's safe to assume a basic understanding of regression models, so:
+
+Response is a linearly dependent on the regressors, which can be time series variables
+
+Multiple seasonality is achieved by adding seasonal dummy variables or splines
+
+---
+
+# Considered regression models
+
+### Three regression models are considered:
+
+--
+
+.center[
+## Multiple Linear Regression
+]
+
+???
+
+Simplest form, with additive and interacting seasonal dummy variables
+
+--
+
+.center[
+## Generalised Additive Models
+]
+
+???
+
+Which is a generalisation that does not restrict the response as being normally distributed.
+
+This is particularly useful for our non-negative count data, where a Poisson distribution would be more appropriate.
+
+Seasonality implemented additively using interacting splines
+
+--
+
+.center[
+## Prophet
+]
+
+???
+
+A specification of a GAM model recently open-sourced by a Facebook research team.
+Seasonality is approximated using a exponential form Fourier series.
+
+---
+
+## Regression model findings
+
+???
+
+Read from slides
+
+--
+
+.pull-left[## Strengths:
+- ### Highly flexible specification
+- ### Co-variates (and holidays) easily included
+- ### Relatively fast]
+
+--
+
+.pull-right[## Weaknesses:
+- ### Doesn't naturally handle serial correlation
+- ### Time series components cannot evolve over time]
+
+---
+class: inverse, center, middle
+
+# State space models
+
+???
+
+A model where the observed response variable is supplemented by unobserved auxiliary state variables. These state variables summarise the history of the observed, and are used to determine future behaviour of the data
+
+The state variables evolve over time in accordance to a recurrance relationship.
+
+---
+
+# Considered state space models
+
+### Three state space models are considered:
+
+--
+
+.center[
+## Double-seasonal Holt-Winters
+]
+
+???
+
+Simplest form, adds two seasonal terms to the model which evolve over time
+
+--
+
+.center[
+## BATS/TBATS
+]
+
+???
+
+BATS is an extension of DSHW which includes a Box-Cox transformation, ARMA errors, and unlimited seasonal terms.
+TBATS extends BATS by also reformulating the seasonality with a trigonometric Fourier series.
+
+--
+
+.center[
+## Multiple seasonal ARIMA
+]
+
+???
+
+Implements multiple seasonality by combining seasonal autoregression.
+Unlike DSHW, BATS and TBATS, this can handle coregressors.
+
+---
+
+## State space model findings
+
+???
+
+Read from slides
+
+These are more or less the opposite of the regression models.
+
+--
+
+.pull-left[## Strengths:
+- ### Time series components evolve over time
+- ### Naturally handles serial correlation]
+
+--
+
+.pull-right[## Weaknesses:
+- ### Inflexible model specification
+- ### Co-variates (and holidays) are difficult to include
+- ### Relatively slow]
+
+---
+class: inverse, center, middle
+
+# Research plan and preliminary results
+
+---
+
+# Evaluate currently used models
+
+???
+
+Fortunately, there's plenty of data! Perhaps too much data!
+
+As lots of data makes it difficult to fully test the models using the typical cross-validation techniques.
+
+--
+
+- ## Model accuracy
+    K-fold rolling-origin time series cross-validation method
+
+???
+
+Forecast accuracy is typically evaluated using out of sample errors from a rolling-origin cross-validation method. This involves estimating too many models for it to be computationally feasible, so I've extended this methodology giving:
+
+K-fold rolling-origin time series cross-validation. This reduces the computation necessary by orders of 100s.
+
+Most forecasts are considerably poor, however more analysis is required.
+
+Currently multiple seasonal ARIMA seems to perform the best, however the optimal specification for the regression methods is yet to be determined
+
+--
+
+- ## Computation speed
+
+???
+
+Record estimation computation time whilst testing accuracy.
+
+State space models seem substantially slower than regression models.
+
+--
+
+- ## Robustness
+    Introduce noise and outliers by simulation
+
+???
+
+Plan to test model sensitivity by introduce noise and outliers by simulation
+
+---
+
+# Proposed model
+
+--
+
+### A structural state space model, with:
+
+--
+
+- ### Multiple sources of error (to allow exogenous inputs)
+
+--
+
+- ### Flexible specification of model terms (especially for seasonality)
+
+--
+
+- ### Substantially reduced parameterisation problem
+
+--
+
+- ### Which hopefully makes it reasonably fast
+
+---
+
+# Implementation
+
+--
+
+![Rstudio](resources/r_1.png)
+
+???
+
+Everything is done in R using RStudio with a variety of packages
+
+---
+
+# Implementation
+
+
+![R writing](resources/r_2.png)
+
+???
+
+knitr and rmarkdown have been used to generate the proposal and presentation
+
+---
+
+# Implementation
+
+![R dates](resources/r_3.png)
+
+???
+
+lubridate manages the dates
+
+---
+
+# Implementation
+
+
+![R graphics](resources/r_4.png)
+
+???
+
+ggplot for graphs
+
+---
+
+# Implementation
+
+
+![R data](resources/r_5.png)
+
+???
+
+These for data manipulation and functional programming
+
+---
+
+# Implementation
+
+
+![R pkg](resources/r_full.png)
+
+???
+
+devtools to maintain the package
+
+---
+
+# (and many more packages without stickers)
+
+## Especially noteworthy:
+
+- ### forecast by Rob Hyndman
+- ### dlm by Giovanni Petris
+
+???
+
+forecast package provides many of the tools for comparing the considered models
+(where is our R sticker Rob?)
+
+dlm package is where our proposed model will be constructed
+
+---
+
+# Reproducible research
+
+???
+
+This results and findings in this project aim to be reproducible
+
+--
+
+- ### All data is freely available in public domain
+
+???
+
+Read from slides
+
+--
+
+- ### Research progress and history maintained in a Git repository
+
+--
+
+- ### All data, code and packages necessary are bundled into an R package
+
+---
+class: inverse, center, top
+
+# Questions?
+
+--
+
+# Comments?
+
+--
+
+# Suggestions?
+
+---
+
+# Seasonal growth
+![](presentation1_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+???
+
+Note that when the seasonality is aggregated out of the time series, you can observe an "additive trend"
+
+However when observed sub-daily, this trend is not additive. Instead, the spread of the seasonality increases. The minimum observations remains constant.
+
+---
+class: center
+
+## K-fold rolling-origin time series cross-validation 
+![](presentation1_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+![RMSE h](resources/accuracy.png)
+
+---
+
+# RMSE from algorithm for snaive
+
+![](presentation1_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+
+# MLR
+
+![MLR](resources/mlr1.png)
+
+
+---
+
+# MLR forecast
+
+![MLR fc](resources/mlr_fc-1.png)
+
+---
+# GAM
+
+![GAM 1](resources/gam1.png)
+
+![GAM 2](resources/gam2.png)
+
+---
+
+# GAM forecast
+
+![GAM fc](resources/gam_fc-1.png)
+
+---
+
+# Prophet 
+
+![Prophet 1](resources/prophet1.png)
+
+g(t) is defined by either a linear or a logistic growth model
+
+![Prophet 2](resources/prophet2.png)
+
+![Prophet 3](resources/prophet3.png)
+
+---
+
+# Prophet forecast
+
+![Prophet fc](resources/prophet_fc-1.png)
+
+---
+
+# State space models
+
+![State space model](resources/stateSpace.png)
+
+---
+
+# DSHW
+
+![DSHW](resources/dshw1.png)
+
+---
+
+# DSHW forecast
+
+![DSHW fc](resources/dshw_fc-1.png)
+
+---
+
+.pull-left[# BATS
+
+
+![BATS](resources/bats.png)]
+
+.pull-right[# TBATS
+
+![TBATS](resources/tbats.png)]
+
+
+---
+
+# TBATS forecast
+
+![TBATS fc](resources/tbats_fc-1.png)
+
+---
+
+# Multiple seasonal ARIMA
+
+![MS ARIMA](resources/msarima.png)
+    </textarea>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {window.dispatchEvent(new Event('resize'));});</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
