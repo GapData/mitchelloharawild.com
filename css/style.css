@@ -56,3 +56,11 @@ h2 {
   -webkit-transition: all 0.2s;
   transition: all 0.2s;
 }
+
+@media (max-width: 575px) {
+
+  h1{
+    font-size: 16vw;
+  }
+
+}
