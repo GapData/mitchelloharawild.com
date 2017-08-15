@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Game theory analysis of change in city transportation</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Mitchell O’Hara-Wild (25161407)" />
+    <meta name="date" content="2017-08-15" />
+    <link href="project_scenario_files/remark-css/example.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Game theory analysis of change in city transportation
+## Presentation of project domain and scenario
+### Mitchell O’Hara-Wild (25161407)
+### 2017-08-15
+
+---
+
+class: left, top
+
+
+
+# Context
+
+Stress on city transportation infrastructure during peak periods is a cause of concern for the many who travel for work.
+
+It is easy to imagine the importance of a well functioning transportation network for a healthy and growing city population.
+
+Delays and traffic are detrimental to city health as it:
+- Increased worker stress
+- Inefficient use of human resources
+- Increased environmental impact
+
+---
+
+## Application
+
+The City of Melbourne is an ideal motivating example for this simulation. As seen below, the majority of individuals travel to the city by car and train.
+
+--
+
+![Melbourne transportation methods](img/travel_melb.png)
+
+---
+
+# City growth
+
+Current projections are for a 2% growth rate in the city population&lt;sup&gt;1&lt;/sup&gt;.
+
+With numerous complaints about the quality of the train network and congestion on major highways, transportation to the city will need to adapt to handle growing demand. 
+
+.footnote[
+[1] [Daily population estimates and forecasts report 2015](https://www.melbourne.vic.gov.au/SiteCollectionDocuments/daily-population-estimates-and-forecasts-report-2015.pdf)
+]
+---
+
+# Project domain and scenario
+
+This project will implement a simulated city transportation network (loosely informed by the Melbourne transportation network), which can be used to analyse how the effect of an increasing demand on the network changes consumer transportation decision making.
+
+Better understanding transportation needs is essential for developing appropriate infrastructure to manage growth in a healthy city.
+
+---
+
+# Model angle
+
+This model will be designed with the needs of city planners in mind, who are entasked with improving access to the city.
+
+Given the extensive information available on the population's preferred methods of transportation (via sensors, reporting, and census data), the decision makers are assumed to have perfect knowledge of transportation demand.
+
+The key parameter for the simulation will be growth in transportation demand (proxied by the employed city population). 
+
+By imposing growth models with carrying capacities on each transportation method, the simulation will emulate how consumers change their demand as a consequence of congestion.
+
+---
+
+# Simplifying assumptions
+
+Due to the complex nature of this problem, this model will require many substantial assumptions to make it feasible.
+
+The extent of these assumptions will become clear in the next two weeks, as the formulae and payoff matrix for the problem are developed.
+
+These simplifying assumptions may relate to:
+- Changes in supply
+- Changes in price
+- Location of demand
+- Cross-price elasticities
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {window.dispatchEvent(new Event('resize'));});
+(function() {var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler"); if (!r) return; s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }"; d.head.appendChild(s);})();</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
