@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Game theory analysis of change in city transportation</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Mitchell O’Hara-Wild (25161407)" />
+    <meta name="date" content="2017-08-29" />
+    <link href="model_math_files/remark-css/example.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Game theory analysis of change in city transportation
+## Presentation of model formulae
+### Mitchell O’Hara-Wild (25161407)
+### 2017-08-29
+
+---
+
+class: left, top
+
+
+
+# Overview
+
+As discussed previously, the key input for this model will be demand growth for transportation to the city.
+Accordingly, the model needs to distribute this population into sub-populations separated by transportation method.
+
+---
+
+# Level of detail
+
+The level of detail appropriate for this model can be chosen based on the feasibility of obtaining relevant data. Accordingly, I will be building the model using different transport groups as having distinct populations. These populations transition between transport options conditional on the model's environment.
+
+This promotes deterministic modelling and functional programming.
+
+---
+
+# Growth models
+
+## Logistic growth functions
+
+As each mode of transportation has a maximum capacity ($K$), logistic growth functions are appropriate for describing population movements.
+
+$$ \dfrac{\partial P_i}{\partial t} = r_i\dfrac{(K_i - P_i)}{K_i} P_i $$
+
+---
+
+![logisticGrowth](http://www.zo.utexas.edu/courses/Thoc/Fig9.3.GIF)
+
+---
+
+# Transport transition functions
+
+Currently considering functions inspired by VARs or VECMs, as these should introduce change inelasticity for the transportation choices in the population.
+
+![2D VAR(1)](img/var_2_1.png)
+
+---
+
+# Contributory variables
+
+- Weather
+- Holidays/events
+- Transport disruptions (road closures, rail)
+
+---
+
+# Outcome variables
+
+- Average transportation time
+- Stress
+- Environmental impact
+
+---
+
+![Rough model diagram](img/model_diagram.png)
+
+---
+
+# Payoff matrix
+
+Utility of city vs utility of consumers?
+
+Utility of each mode of transportation?
+
+---
+
+# Implementation
+
+The language of choice is R, with necessary functions bundled into an R package, and a UI built on Shiny.
+
+![Shiny](img/shiny.png)
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {window.dispatchEvent(new Event('resize'));});
+(function() {var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler"); if (!r) return; s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }"; d.head.appendChild(s);})();</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
