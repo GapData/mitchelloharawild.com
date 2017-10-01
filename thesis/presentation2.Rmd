@@ -22,6 +22,8 @@ library(tidyverse)
 library(lubridate)
 library(fpp2)
 library(fasster)
+library(knitr)
+library(kableExtra)
 
 theme_set(theme_gray(base_size = 23))
 ```
@@ -59,31 +61,33 @@ pedestrian_ts <- pedestrian_cleaned %>%
 
 ## Background & Motivation
 
+There is a **growing demand** for tools that can handle **multiple seasonality**.
+
+<br>
+
+???
+
 The need for models which can appropriately handle time-series data that contain multiple seasonality patterns is growing.
 
 --
 
 This can be attributed to:
 
-* Increased need for understanding sub-daily patterns
+* Increased need for **understanding sub-daily patterns**
+
+* **Technological improvements** collecting high frequency data
+
+* **Multiple seasonality is common** in societal behaviour at high frequencies
 
 --
 
-* Technological improvements collecting high frequency data
+<br>
 
---
+**Very few tools are available** that appropriately model these patterns.
 
-* Multiple seasonality is common in societal behaviour at high frequencies
+Currently used tools have **poor speed, flexibility, or accuracy**.
 
----
-
-## Background & Motivation
-
-Currently there are very few tools capable of handling these types of datasets, and those that can lack the flexibility necessary to include all appropriate model components.
-
-Many of the currently used models have substantial shortcomings in terms of speed, flexibility, and accuracy.
-
-Accordingly, new tools are required to allow fast, flexible and accurate modelling of complex time-series structures.
+So, to support modelling of these complex structures, **new tools are needed**.
 
 ---
 class: inverse, center, bottom
@@ -113,7 +117,7 @@ ggplot() +
   facet_grid(series~., scales="free_y") + 
   ylab("Pedestrians counted") + 
   xlab("Date") +
-  ggtitle("Temporal granularity in pedestrian traffic at Southern Cross Station")
+  ggtitle("Temporal granularity in pedestrian traffic at Sthrn Cross Stn")
 ```
 
 ???
@@ -151,7 +155,7 @@ ggplot(ped_plot, aes(x = TimeOnly,
   facet_wrap(~ workday) + 
   ylab("Total pedestrians counted") + 
   xlab("Time") + 
-  ggtitle("Seasonality in pedestrian traffic at Sth Cross Stn") + 
+  ggtitle("Seasonality in pedestrian traffic at Southern Cross Station") + 
   scale_x_datetime(date_labels = "%H %p") + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
@@ -235,126 +239,49 @@ This illustrates the importance of allowing exogenous regressors in a model for 
 
 ### The ideal model is:
 
-???
-
-So what makes a good model for forecasting multiple seasonality time series?
-
---
-
 .center[
 ## Accurate
-]
 
-???
-
-Pretty self explanatory, model accuracy is highly desirable. Doesn't require any further justification :)
-
---
-
-.center[
 ## Flexible
-]
 
-???
-
-Model specification should be flexible to suit a wide range of data applications. A tuned specification reduces the parameterisation problem.
-
---
-
-.center[
 ## Fast
 ]
 
 ???
 
-The model should produce estimates in a reasonable amount of time
-
---
-
-.center[
-## Robust
-]
-
-???
-
-The model should not be sensitive to outliers or noise.
+So what makes a good model for forecasting multiple seasonality time series?
 
 ---
 class: inverse, center, middle
 
-# Regression models
-
-???
-
-I think it's safe to assume a basic understanding of regression models, so:
-
-Response is a linearly dependent on the regressors, which can be time series variables
-
-Multiple seasonality is achieved by adding seasonal dummy variables or splines
+# Suggested models for 
+# multiple seasonality
 
 ---
 
-# Considered regression models
-
-### Three regression models are considered:
-
---
+### Regression models
 
 .center[
-## Multiple Linear Regression
-]
-
-???
-
-Simplest form, with additive and interacting seasonal dummy variables
-
---
-
-.center[
-## Generalised Additive Models
-]
-
-???
-
-Which is a generalisation that does not restrict the response as being normally distributed.
-Seasonality implemented additively using interacting splines
-
---
-
-.center[
-## Prophet
+### Multiple Linear Regression
+### Generalised Additive Models
+### Prophet
 ]
 
 ???
 
 A specification of a GAM model recently open-sourced by a Facebook research team.
-Seasonality is approximated using a exponential form Fourier series.
-
----
-
-## Regression model findings
-
-???
-
-Read from slides
+Seasonality is approximated using a Fourier series.
 
 --
 
-.pull-left[## Strengths:
-- ### Highly flexible specification
-- ### Co-variates (and holidays) easily included
-- ### Relatively fast]
+### State space models
 
---
+.center[
+### Double-seasonal Holt-Winters
+### BATS/TBATS
+### Multiple seasonal ARIMA
+]
 
-.pull-right[## Weaknesses:
-- ### Doesn't naturally handle serial correlation
-- ### Time series components cannot evolve over time]
-
----
-class: inverse, center, middle
-
-# State space models
 
 ???
 
@@ -364,64 +291,95 @@ The state variables evolve over time in accordance to a recurrance relationship.
 
 ---
 
-# Considered state space models
+## Model performance comparison
+<table class="table">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Flexible</th>
+      <th>Speed</th>
+      <th>Accuracy</th>
+      <th>Exogenous Regressors</th>
+      <th>Dynamic Terms</th>
+      <th>Evolving Terms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MLR</td>
+      <td class="success">Yes</td>
+      <td class="success">Fast</td>
+      <td class="danger">Poor</td>
+      <td class="success">Yes</td>
+      <td class="danger">No</td>
+      <td class="danger">No</td>
+    </tr>
+    <tr>
+      <td>GAM</td>
+      <td class="success">Yes</td>
+      <td class="success">Fast</td>
+      <td class="warning">Okay</td>
+      <td class="success">Yes</td>
+      <td class="danger">No</td>
+      <td class="danger">No</td>
+    </tr>
+    <tr>
+      <td>&nbsp;&nbsp;&nbsp;Prophet&nbsp;&nbsp;&nbsp;&nbsp;</td>
+      <td class="warning">Partial</td>
+      <td class="warning">Moderate</td>
+      <td class="success">Good*</td>
+      <td class="danger">No</td>
+      <td class="danger">No</td>
+      <td class="danger">No</td>
+    </tr>
+  </tbody>
+</table>
 
-### Three state space models are considered:
+### State space models
+<table class="table">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Flexible</th>
+      <th>Speed</th>
+      <th>Accuracy</th>
+      <th>Exogenous Regressors</th>
+      <th>Dynamic Terms</th>
+      <th>Evolving Terms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DSHW</td>
+      <td class="danger">No</td>
+      <td class="warning">Moderate</td>
+      <td class="warning">Okay</td>
+      <td class="danger">No</td>
+      <td class="success">Yes</td>
+      <td class="success">Yes</td>
+    </tr>
+    <tr>
+      <td>BATS/TBATS</td>
+      <td class="danger">No</td>
+      <td class="danger">Slow*</td>
+      <td class="success">Good*</td>
+      <td class="danger">No</td>
+      <td class="success">Yes</td>
+      <td class="success">Yes</td>
+    </tr>
+    <tr>
+      <td>MSARIMA</td>
+      <td class="danger">No</td>
+      <td class="danger">V. Slow</td>
+      <td class="danger">Poor</td>
+      <td class="success">Yes</td>
+      <td class="success">Yes</td>
+      <td class="success">Yes</td>
+    </tr>
+  </tbody>
+</table>
 
---
-
-.center[
-## Double-seasonal Holt-Winters
-]
-
-???
-
-Simplest form, adds two seasonal terms to the model which evolve over time
-
---
-
-.center[
-## BATS/TBATS
-]
-
-???
-
-BATS is an extension of DSHW which includes a Box-Cox transformation, ARMA errors, and unlimited seasonal terms.
-TBATS extends BATS by also reformulating the seasonality with a trigonometric Fourier series.
-
---
-
-.center[
-## Multiple seasonal ARIMA
-]
-
-???
-
-Implements multiple seasonality by combining seasonal autoregression.
-Unlike DSHW, BATS and TBATS, this can handle coregressors.
-
----
-
-## State space model findings
-
-???
-
-Read from slides
-
-These are more or less the opposite of the regression models.
-
---
-
-.pull-left[## Strengths:
-- ### Time series components evolve over time
-- ### Naturally handles serial correlation]
-
---
-
-.pull-right[## Weaknesses:
-- ### Inflexible model specification
-- ### Co-variates (and holidays) are difficult to include
-- ### Relatively slow]
+.footnote[[*] This can depend on the data substantially]
 
 ---
 
@@ -429,23 +387,13 @@ These are more or less the opposite of the regression models.
 
 ### A structural state space model, with:
 
---
-
 - ### Multiple seasonality capabilities
-
---
 
 - ### Flexible model specification
 
---
-
 - ### Multiple sources of error
 
---
-
 - ### Exogenous regressor support
-
---
 
 - ### Handling of missing values
 
@@ -476,36 +424,44 @@ class: inverse, center, top
 
 # Switching Structure
 
-FASSTER extends currently used state-space approaches by introducing a switching structure to the underlying states.
+FASSTER extends current state-space approaches by switching between states.
 
 --
 
-For each switching group in the model, a set of states are maintained for the measurement equation switch between.
+A DLM representation of a state-space model can be written as:
+\begin{align*}
+y_t &= F_t\theta_t + v_t, & v_t &\sim \mathcal{N}(0,V)\\
+\theta_t &= G\theta_{t-1} + w_t, & w_t&\sim \mathcal{N}(0,W)
+\end{align*}
 
 --
 
-A generic measurement equation for a state-space model can be written as:
-$$y_t = F_t\theta_t + v_t, \hspace{2em} v_t \sim \mathcal{N}(0,V)$$
+Constructing this model to switch between two groups gives:
+\begin{align*}
+y_t &= \mathbf{I}_{t\in G_1}F_t\theta_{t}^{(1)} + \mathbf{I}_{t\in G_2}F_t\theta_{t}^{(2)} + v_t & v_t &\sim \mathcal{N}(0,V)
+\end{align*}
+
+Groups $G_1$ and $G_2$ define the switching rule (say weekdays and weekends).
 
 --
 
-Extending this model to switch between two groups gives:
-$$y_t = \mathbf{I}_{t\in G_1}F_t\theta_{t}^{(1)} + \mathbf{I}_{t\in G_2}F_t\theta_{t}^{(2)} + v_t, \hspace{2em} v_t \sim \mathcal{N}(0,V)$$
+<br>
 
-Where the groups $G_1$ and $G_2$  $(G_2$ is the complement of $G_1)$ are defined by a switching rule (say Weekdays and Weekends).
+In this model, the **state equations** for both groups follow the **same structure**.
 
---
-
-In this model, the state equations for both groups follow the same structure, but have different error terms that allow them to behave independently. This is not a necessary constraint for the model.
+The states have **different error terms** which produces **different behaviour**.
 
 ---
 
 # Application to pedestrian traffic
 
+This series contains a switching daily pattern over weekdays and weekends.
+Each group can be modelled using level and hourly seasonal states.
+
 ```{r}
 SthCross_fasster_tr <- pedestrian_cleaned$`Southern Cross Station` %>%
   filter(DateTime > ymd("2017-01-30") & DateTime <= ymd("2017-02-20"))
-fit <- SthCross_fasster_tr %>%
+SthCross_fasster_fit <- SthCross_fasster_tr %>%
   fasster(Hourly_Counts ~ is_weekend(DateTime) %S% (poly(1) + trig(24)))
 
 as.tibble(SthCross_fasster_tr) %>%
@@ -516,24 +472,20 @@ as.tibble(SthCross_fasster_tr) %>%
   xlab("Date")
 ```
 
-Each group in this series contain a daily pattern, which switches between weekdays and weekends.
-The series in each group can be modelled using level and seasonal states.
 ---
 
-# Modelling with FASSTER
+An appropriate model can be constructed using switching states:
 
-The state equations are set to contain a level $(\ell)$ and hourly trigonometric seasonality $(f_{24})$ (where $\ell$ and $f_{24}$ are defined later):
+$$y_t = \mathbf{I}_{t\in Weekday}F_t\theta_{t}^{(Weekday)} + \mathbf{I}_{t\in Weekend}F_t\theta_{t}^{(Weekend)} + v_t$$
 
-$$F_t\theta_t^{(i)} = \ell_{t}^{(i)} + f_{t}^{(i)}$$
-
-$$y_t = \mathbf{I}_{t\in Weekday}F_t\theta_{t}^{(Weekday)} + \mathbf{I}_{t\in Weekend}F_t\theta_{t}^{(Weekend)} + v_t, \hspace{2em} v_t \sim \mathcal{N}(0,V)$$
+$$\text{Where}\hspace{1em}F_t\theta_t^{(i)} = \ell_{t}^{(i)} + f_{t}^{(i)} \hspace{1em}\text{and}\hspace{1em} v_t \sim \mathcal{N}(0,V)$$
 
 --
 
 ```{r}
 as.tibble(SthCross_fasster_tr) %>%
   rename(Actual = Hourly_Counts) %>%
-  mutate(Fitted = fit$fitted) %>%
+  mutate(Fitted = SthCross_fasster_fit$fitted) %>%
   gather(Series, Values, Actual, Fitted) %>%
   ggplot(aes(x=DateTime, y=Values, colour=Series)) + 
   geom_line() + 
@@ -545,12 +497,17 @@ as.tibble(SthCross_fasster_tr) %>%
 ---
 
 ## FASSTER allows flexible use of:
+
+.pull-left[
 - ### seasonal factors
 - ### fourier seasonal terms
 - ### n-th order polynomials
+]
+.pull-right[
 - ### exogenous regressors
 - ### ARMA processes
 - ### state switching
+]
 
 ???
 
@@ -657,6 +614,7 @@ r &= max\{p, q+1\}\\
 The general measurement equation in a FASSTER model is:
 
 $$y_t = F_t^{(0)}\theta_{t}^{(0)} + \sum_{j=1}^k\mathbf{I}_{t\in G_j}F_t^{(j)}\theta_{t}^{(j)} + v_t, \hspace{2em} v_t \sim \mathcal{N}(0,V)$$
+Where $k$ is the number of switching combinations.
 
 --
 
@@ -737,7 +695,7 @@ Computing the likelihood is slow due to the series length.
 
 ---
 
-# Heuristic estimation (filterSmooth)
+## Heuristic estimation (filterSmooth)
 
 1. Filtering the data using the specified model with non-zero state variances
 
@@ -828,11 +786,16 @@ SthCross_Ex <- SthCross_fasster_tr %>%
   select(DateTime, Hourly_Counts, DayType)
 ```
 
-```{r, echo = TRUE}
-SthCross_Ex %>%
-  fasster(Hourly_Counts ~ DayType %S% (poly(1) + trig(24))) %>%
+```{r, echo = TRUE, eval=FALSE}
+SthCross_fasster_fit <- SthCross_Ex %>%
+  fasster(Hourly_Counts ~ DayType %S% (poly(1) + trig(24)))
+```
+
+```{r}
+SthCross_fasster_fit %>%
   ggfitted
 ```
+
 
 ---
 
@@ -843,9 +806,17 @@ elecdemand_Ex <- elecdemand_plot %>%
   filter(DateTime < ymd("2014-02-01"))
 ```
 
-```{r, echo=TRUE}
-elecdemand_Ex %>%
-  fasster(Demand ~ I(Temperature - mean(Temperature))^2 + WorkDay %S% (poly(1) + trig(48, 16))) %>% 
+```{r, echo=TRUE, eval=FALSE}
+elecdemand_fasster_fit <- elecdemand_Ex %>%
+  fasster(Demand ~ I((Temperature - mean(Temperature))^2) + 
+                   WorkDay %S% (poly(1) + trig(48, 16)))
+```
+
+```{r}
+elecdemand_fasster_fit <- elecdemand_Ex %>%
+  fasster(Demand ~ I((Temperature - mean(Temperature))^2) + 
+                   WorkDay %S% (poly(1) + trig(48, 16)))
+elecdemand_fasster_fit %>% 
   ggfitted
 ```
 
@@ -855,11 +826,23 @@ elecdemand_Ex %>%
 <br>
 # Built on top of dlm
 
-The **dlm** package by Giovanni Petris is the backbone for the **fasster** package.
+The **dlm** package is the backbone for the **fasster** package.
 
-It provides the model's object structure, Kalman filter and Kalman smoother functions.
+--
 
-**fasster** extends the **dlm** package by supporting time-varying forecasts.
+It provides necessary tools including:
+
+- DLM object structure
+- Kalman filter
+- Kalman smoother
+- Model building functions
+
+--
+
+It does not provide:
+
+- Time-varying forecasts
+- Plotting tools
 
 ---
 
@@ -867,13 +850,140 @@ It provides the model's object structure, Kalman filter and Kalman smoother func
 <br>
 # Consistent with tidyverse API
 
+
+**fasster**  complements with the **tidyverse** of packages.
+
+<br>
+<br>
+
+.center[
+![r4ds_workflow](resources/r4ds_workflow.png)
+
+R for Data Science: suggested project workflow
+]
+
 ---
 
 .sticker-float[![forecast](resources/forecast.png)]
 <br>
 # Extends the forecast package
 
-**fasster** models and forecasts are consistent with the forecast object structure
+**fasster** objects are consistent with the **forecast** package.
+
+--
+
+Which provides:
+
+- Plotting of forecasts and components
+- Model extraction methods
+- Accuracy measures
+- Residual diagnostics.
+
+---
+
+# Example workflow
+
+The way **fasster** integrates with other package is clear in this example of forecasting half-hourly electricity demand (from Taylor, 2003).
+
+```{r, echo=TRUE, eval=FALSE}
+library(fasster)
+library(tidyverse)
+library(lubridate)
+library(forecast)
+
+tbl_taylor <- tibble(taylor) %>%
+  mutate(DateTime = seq(ymd_h("2000-6-5 00"), by="30 mins", length.out=length(taylor)),
+         DayType = ifelse(wday(DateTime) %in% 2:6, "Weekday", "Weekend")) %>% 
+  filter(month(DateTime) == 8)
+tbl_taylor %>%
+  filter(DateTime < ymd("2000-8-21")) %>%
+  fasster(taylor ~ DayType %S% (poly(1) + trig(48, 16))) %>%
+  forecast(newdata=tbl_taylor %>%
+             filter(DateTime >= ymd("2000-8-21"))) %>%
+  autoplot() + 
+  ylab("Electricity Demand (Megawatts)") + 
+  xlab("Time (5 June 2000 - 27 August 2000)")
+```
+
+---
+
+# Example workflow
+
+```{r}
+library(fasster)
+library(tidyverse)
+library(lubridate)
+library(forecast)
+
+tbl_taylor <- tibble(taylor) %>%
+  mutate(DateTime = seq(ymd_h("2000-6-5 00"), by="30 mins", length.out=length(taylor)),
+         DayType = ifelse(wday(DateTime) %in% 2:6, "Weekday", "Weekend")) %>% 
+  filter(month(DateTime) == 8)
+tbl_taylor %>%
+  filter(DateTime < ymd("2000-8-21")) %>%
+  fasster(taylor ~ DayType %S% (poly(1) + trig(48, 16))) %>%
+  forecast(newdata=tbl_taylor %>%
+             filter(DateTime >= ymd("2000-8-21"))) %>%
+  autoplot() + 
+  ylab("Electricity Demand (Megawatts)") + 
+  xlab("Time (5 June 2000 - 27 August 2000)")
+```
+
+---
+
+# Model specification
+
+The formula model specification for **fasster** is designed to be:
+
+.pull-left[
+- Concise
+- Convenient
+- Intuitive
+]
+.pull-right[
+- Unsurprising
+- Unrestricted
+- Flexible
+]
+
+--
+
+<br>
+
+Standard model formula rules are conserved.
+
+```{r, echo=TRUE, eval=FALSE}
+data %>% fasster(y ~ x1 + log(x2) + x1:x2)
+```
+
+Specifying complex structures is convenient.
+
+```{r, echo=TRUE, eval=FALSE}
+data %>% fasster(y ~ poly(1) + trig(24))
+```
+
+---
+
+# Model specification
+
+Switching functions intuitively
+
+```{r, echo=TRUE, eval=FALSE}
+data %>% fasster(y ~ groupVar %S% (poly(1) + trig(24)))
+```
+
+Exogenous regressors are easy to include
+
+```{r, echo=TRUE, eval=FALSE}
+data %>% fasster(y ~ x1 + groupVar %S% (poly(1) + trig(24)))
+```
+
+Complex models are simple to specify
+
+```{r, echo=TRUE, eval=FALSE}
+data %>% fasster(y ~ x1 + gV1 %S% (gV2 %S% poly(1) + trig(24)))
+```
+
 
 ---
 class: inverse, center, top

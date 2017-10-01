@@ -61,3 +61,22 @@
 	height: 200px;
 	float: right;
 }
+
+.table{
+	width: 100%;
+	text-align: center;
+}
+
+.table > tbody > tr > td.success {
+	background-color: #dff0d8;
+}
+
+.table > tbody > tr > td.warning {
+	background-color: #fcf8e3;
+}
+
+.table > tbody > tr > td.danger {
+	background-color: #f2dede;
+}
+
+.mjx-chtml{ font-size: 110% !important; }
