@@ -210,7 +210,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
       &lt;td class="warning"&gt;Moderate&lt;/td&gt;
       &lt;td class="success"&gt;Good*&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
-      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="success"&gt;Good&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
@@ -233,7 +233,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
     &lt;tr&gt;
       &lt;td&gt;DSHW&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
-      &lt;td class="warning"&gt;Moderate&lt;/td&gt;
+      &lt;td class="danger"&gt;Slow&lt;/td&gt;
       &lt;td class="warning"&gt;Okay&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
       &lt;td class="success"&gt;Yes&lt;/td&gt;
@@ -242,7 +242,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
     &lt;tr&gt;
       &lt;td&gt;BATS/TBATS&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
-      &lt;td class="danger"&gt;Slow*&lt;/td&gt;
+      &lt;td class="danger"&gt;Slower*&lt;/td&gt;
       &lt;td class="success"&gt;Good*&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
       &lt;td class="success"&gt;Yes&lt;/td&gt;
@@ -251,16 +251,16 @@ The state variables evolve over time in accordance to a recurrance relationship.
     &lt;tr&gt;
       &lt;td&gt;MSARIMA&lt;/td&gt;
       &lt;td class="danger"&gt;No&lt;/td&gt;
-      &lt;td class="danger"&gt;V. Slow&lt;/td&gt;
+      &lt;td class="danger"&gt;Slowest&lt;/td&gt;
       &lt;td class="danger"&gt;Poor&lt;/td&gt;
       &lt;td class="success"&gt;Yes&lt;/td&gt;
-      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
       &lt;td class="success"&gt;Yes&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;
 
-.footnote[[*] This can depend on the data substantially]
+.footnote[[*] This can substantially depend on the data]
 
 ---
 
@@ -380,15 +380,15 @@ The equations are standard for DLMs and state-space models, so in the interest o
 
 ## seas(s): Seasonal factors
 
-This creates seasonal factors with frequency s, which are similar to how seasonality is handled by DSHW and BATS.
+This creates seasonal factors with frequency **s**, which are similar to how seasonality is handled by DSHW and BATS.
 
-Analagous to seasonal dummies in regression models, but the factors evolve with time.
+Analagous to regression seasonal dummies, but the factors evolve with time.
 
 --
 
 ## trig(s, q): Seasonal Fourier terms
 
-This creates seasonal fourier terms with frequency s using q harmonics (similarly to TBATS)
+This creates seasonal fourier terms with frequency **s** using **q** harmonics, which is similar to TBATS.
 
 Trigonometric seasonality is advantageous as it is:
 
@@ -406,15 +406,13 @@ This provides a more flexible specification of seasonality than seasonal factors
 
 ## poly(1): Level
 
-Levels are analogous to an evolving constant.
-
-They are usually used in combination with seasonal components to shift them to the appropriate level.
+Levels are analogous to an evolving constant. They are usually used in combination with seasonal components to shift them to the appropriate level.
 
 --
 
 ## poly(2): Trend
 
-As in DSHW and BATS/TBATS, trend can be added to the model.
+Similarly to DSHW and BATS/TBATS, trend can be added to the model.
 
 --
 
@@ -519,7 +517,7 @@ There are well over 100 parameters that require estimation.
 
 --
 
-.center[Numerical optimisation techniques involving the .bold[MLE is infeasible]!]
+.center[Numerical optimisation techniques involving the .bold[MLE are infeasible]!]
 
 ???
 
@@ -562,6 +560,27 @@ m_0 &amp;= \mathbb{E}\left(\theta_0^{(s)}\right), &amp; C_0 &amp;= \text{Var}\le
 --
 
 .center.bold[Only two passes through the data are required.]
+
+---
+
+## Making FASSTER even *fasster*
+
+### Problem: High frequency time-series tend to be long
+
+This can make the two passes through the data fairly slow.
+
+--
+
+### Solution: Apply the heuristic on the tail of the time-series
+
+As a forecasting tool, optimising over the full length series is unnecessary.
+
+Only the tail of the series is necessary for producing good forecasts.
+
+---
+class: inverse, middle, center
+
+# Implementation
 
 ---
 class: inverse, top
@@ -618,7 +637,7 @@ SthCross_fasster_fit &lt;- SthCross_Ex %&gt;%
 
 ```r
 elecdemand_fasster_fit &lt;- elecdemand_Ex %&gt;%
-  fasster(Demand ~ I((Temperature - mean(Temperature))^2) + 
+  fasster(Demand ~ I(abs(Temperature - mean(Temperature))) + 
                    WorkDay %S% (poly(1) + trig(48, 16)))
 ```
 
@@ -779,6 +798,114 @@ data %&gt;% fasster(y ~ x1 + gV1 %S% (gV2 %S% poly(1) + trig(24)))
 
 ---
 
+# Forecasts (Electricity demand)
+
+![](presentation2_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+
+
+---
+
+#### Regression models
+&lt;table class="table"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Model&lt;/th&gt;
+      &lt;th&gt;Flexible&lt;/th&gt;
+      &lt;th&gt;Speed&lt;/th&gt;
+      &lt;th&gt;Accuracy&lt;/th&gt;
+      &lt;th&gt;Exogenous Regressors&lt;/th&gt;
+      &lt;th&gt;Decompose Components&lt;/th&gt;
+      &lt;th&gt;Evolving Terms&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;MLR&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="success"&gt;Fast&lt;/td&gt;
+      &lt;td class="warning"&gt;Okay&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GAM&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="success"&gt;Fast&lt;/td&gt;
+      &lt;td class="warning"&gt;Okay&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Prophet&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+      &lt;td class="warning"&gt;Partial&lt;/td&gt;
+      &lt;td class="warning"&gt;Moderate&lt;/td&gt;
+      &lt;td class="success"&gt;Good*&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="success"&gt;Good&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+#### State space models
+&lt;table class="table"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Model&lt;/th&gt;
+      &lt;th&gt;Flexible&lt;/th&gt;
+      &lt;th&gt;Speed&lt;/th&gt;
+      &lt;th&gt;Accuracy&lt;/th&gt;
+      &lt;th&gt;Exogenous Regressors&lt;/th&gt;
+      &lt;th&gt;Decompose Components&lt;/th&gt;
+      &lt;th&gt;Evolving Terms&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;DSHW&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="danger"&gt;Slow&lt;/td&gt;
+      &lt;td class="warning"&gt;Okay&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;BATS/TBATS&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="danger"&gt;Slower*&lt;/td&gt;
+      &lt;td class="success"&gt;Good*&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;MSARIMA&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="danger"&gt;Slowest&lt;/td&gt;
+      &lt;td class="danger"&gt;Poor&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+      &lt;td class="danger"&gt;No&lt;/td&gt;
+      &lt;td class="success"&gt;Yes&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;b&gt;FASSTER&lt;/b&gt;&lt;/td&gt;
+      &lt;td class="success"&gt;&lt;b&gt;Yes&lt;/b&gt;&lt;/td&gt;
+      &lt;td class="warning"&gt;&lt;i&gt;&lt;b&gt;fasster&lt;/b&gt;&lt;/i&gt;&lt;/td&gt;
+      &lt;td class="success"&gt;&lt;b&gt;Good*&lt;/b&gt;&lt;/td&gt;
+      &lt;td class="success"&gt;&lt;b&gt;Yes&lt;/b&gt;&lt;/td&gt;
+      &lt;td class="success"&gt;&lt;b&gt;Yes&lt;/b&gt;&lt;/td&gt;
+      &lt;td class="success"&gt;&lt;b&gt;Yes&lt;/b&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+.footnote[[*] This can substantially depend on the data]
+
+---
+
 # Extensions
 
 - ## Improved heuristic estimation
@@ -892,13 +1019,13 @@ r &amp;= max\{p, q+1\}\\
 ---
 
 # Electricity demand performance
-![](presentation2_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+![](presentation2_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
 
 ---
 
 # Electricity demand performance
 
-![](presentation2_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+![](presentation2_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
     </textarea>
 <script src="libs/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({

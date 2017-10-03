@@ -191,7 +191,7 @@ elecdemand_plot <- elecdemand %>%
 
 elecdemand_reg_plot <- elecdemand_plot %>%
   filter(month(DateTime) %in% c(9,10)) %>%
-  mutate(series = "Hourly demand")
+  mutate(series = "Half-hourly demand")
 elecdemand_agg_plot <- elecdemand_reg_plot %>%
   group_by(date(DateTime)) %>%
   summarise(Demand = sum(Demand), DateTime = median(DateTime)) %>%
@@ -234,24 +234,6 @@ An interesting feature of electricity demand is how strongly it relates with Tem
 This illustrates the importance of allowing exogenous regressors in a model for predicting these patterns.
 
 ---
-
-# Multiple seasonal models
-
-### The ideal model is:
-
-.center[
-## Accurate
-
-## Flexible
-
-## Fast
-]
-
-???
-
-So what makes a good model for forecasting multiple seasonality time series?
-
----
 class: inverse, center, middle
 
 # Suggested models for 
@@ -291,7 +273,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
 
 ---
 
-## Model performance comparison
+### Regression models
 <table class="table">
   <thead>
     <tr>
@@ -300,7 +282,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
       <th>Speed</th>
       <th>Accuracy</th>
       <th>Exogenous Regressors</th>
-      <th>Dynamic Terms</th>
+      <th>Decompose Components</th>
       <th>Evolving Terms</th>
     </tr>
   </thead>
@@ -309,7 +291,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
       <td>MLR</td>
       <td class="success">Yes</td>
       <td class="success">Fast</td>
-      <td class="danger">Poor</td>
+      <td class="warning">Okay</td>
       <td class="success">Yes</td>
       <td class="danger">No</td>
       <td class="danger">No</td>
@@ -329,7 +311,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
       <td class="warning">Moderate</td>
       <td class="success">Good*</td>
       <td class="danger">No</td>
-      <td class="danger">No</td>
+      <td class="success">Good</td>
       <td class="danger">No</td>
     </tr>
   </tbody>
@@ -344,7 +326,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
       <th>Speed</th>
       <th>Accuracy</th>
       <th>Exogenous Regressors</th>
-      <th>Dynamic Terms</th>
+      <th>Decompose Components</th>
       <th>Evolving Terms</th>
     </tr>
   </thead>
@@ -352,7 +334,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
     <tr>
       <td>DSHW</td>
       <td class="danger">No</td>
-      <td class="warning">Moderate</td>
+      <td class="danger">Slow</td>
       <td class="warning">Okay</td>
       <td class="danger">No</td>
       <td class="success">Yes</td>
@@ -361,7 +343,7 @@ The state variables evolve over time in accordance to a recurrance relationship.
     <tr>
       <td>BATS/TBATS</td>
       <td class="danger">No</td>
-      <td class="danger">Slow*</td>
+      <td class="danger">Slower*</td>
       <td class="success">Good*</td>
       <td class="danger">No</td>
       <td class="success">Yes</td>
@@ -370,16 +352,16 @@ The state variables evolve over time in accordance to a recurrance relationship.
     <tr>
       <td>MSARIMA</td>
       <td class="danger">No</td>
-      <td class="danger">V. Slow</td>
+      <td class="danger">Slowest</td>
       <td class="danger">Poor</td>
       <td class="success">Yes</td>
-      <td class="success">Yes</td>
+      <td class="danger">No</td>
       <td class="success">Yes</td>
     </tr>
   </tbody>
 </table>
 
-.footnote[[*] This can depend on the data substantially]
+.footnote[[*] This can substantially depend on the data]
 
 ---
 
@@ -491,7 +473,8 @@ as.tibble(SthCross_fasster_tr) %>%
   geom_line() + 
   ylab("Pedestrians counted") + 
   ggtitle("Pedestrian Traffic at Southern Cross Station") +
-  xlab("Date")
+  xlab("Date") + 
+  scale_color_brewer(palette="Dark2", direction=-1)
 ```
 
 ---
@@ -502,6 +485,7 @@ as.tibble(SthCross_fasster_tr) %>%
 - ### seasonal factors
 - ### fourier seasonal terms
 - ### n-th order polynomials
+- ### BoxCox transformations
 ]
 .pull-right[
 - ### exogenous regressors
@@ -516,34 +500,19 @@ The equations are standard for DLMs and state-space models, so in the interest o
 
 ---
 
-# seas(m): seasonal factors
+# Seasonal components
 
-This creates seasonal factors with frequency s.
+## seas(s): Seasonal factors
 
-Like other state space models (such as DSHW and BATS), seasonal factors are defined by rotating states.
+This creates seasonal factors with frequency **s**, which are similar to how seasonality is handled by DSHW and BATS.
 
-For identification, the seasonal states set to sum to 0, reducing the required states by 1.
+Analagous to regression seasonal dummies, but the factors evolve with time.
 
-$$s_{1,t} = -\sum_{j=1}^m s_{j,t-1} + w_{1,t}, \hspace{1em} w_{1,t} \sim \mathcal{N}(0,W_1)$$
+--
 
-$$s_{j,t} = s_{j-1, t-1} + w_{j,t}, \hspace{1em} w_{j,t} \sim \mathcal{N}(0,0) \hspace{1em}\forall j = 2, ..., m-1$$
+## trig(s, q): Seasonal Fourier terms
 
----
-
-# trig(m, q): seasonal fourier terms
-
-This creates seasonal fourier terms with frequency s using q harmonics.
-(Where $q \leq \lfloor s/2 \rfloor$)
-
-As defined in TBATS, the underlying states for seasonal fourier terms are:
-
-\begin{align*}
-f_t &= \sum_{j=1}^{q} f_{j,t}\\
-f_{j,t} &= f_{j,t-1}\cos \lambda_j + f_{j,t-1}^{*}\sin \lambda_j + \gamma_1d_t\\
-f_{j,t}^{*} &= -f_{j,t-1}\sin \lambda_j + f_{j,t-1}^{*}\cos \lambda_j + \gamma_2d_t\\
-\end{align*}
-
-$$\text{Where }\lambda_j = \dfrac{2\pi j}{m}$$
+This creates seasonal fourier terms with frequency **s** using **q** harmonics, which is similar to TBATS.
 
 Trigonometric seasonality is advantageous as it is:
 
@@ -557,55 +526,43 @@ This provides a more flexible specification of seasonality than seasonal factors
 
 ---
 
-# poly(n): n-th order polynomials
+# poly(n): Polynomials
 
-This creates levels, trends, and higher order polynomial states
+## poly(1): Level
 
-The state equation for a level $(\ell_t)$ in the model (poly(1)) is given by:
-$$\ell_t = \ell_{t-1} + w_{1,t}, \hspace{2em} w_{1,t} \sim \mathcal{N}(0,W_1)$$
+Levels are analogous to an evolving constant. They are usually used in combination with seasonal components to shift them to the appropriate level.
 
-Extending this to include a trend state $(b_t)$ in the model (poly(2)) makes the state equations:
+--
 
-$$\ell_t = \ell_{t-1} + b_{t-1} + w_{1,t}, \hspace{2em} w_{1,t} \sim \mathcal{N}(0,W_1)$$
-$$b_t = b_{t-1} + w_{2,t}, \hspace{2em} w_{2,t} \sim \mathcal{N}(0,W_2)$$
+## poly(2): Trend
 
-In general, the $n^{th}$ order polynomial (poly(n)) is built with the states:
-$$\theta_{j,t} = \theta_{j,t-1} + \theta_{j+1, t-1} + w_{j,t}, \hspace{1em} w_{j,t} \sim \mathcal{N}(0,W_j), \hspace{1em}\forall j=1,\ldots,n-1$$
-$$\theta_{n,t} = \theta_{n,t-1} + w_{n,t}, \hspace{2em} w_{n,t} \sim \mathcal{N}(0,W_n)$$
+Similarly to DSHW and BATS/TBATS, trend can be added to the model.
+
+--
+
+## poly(n): Higher order polynomials
+
+Other polynomials are less common, but can be used.
 
 ---
 
-# xreg: Exogenous regressors
+# Other components
+
+## xreg: Exogenous regressors
 
 Regression terms can be constructed by using a state to represent the regression coefficient for each regressor.
-$$\beta_t = \beta_{t-1} + w_{1,t}, \hspace{2em} w_{1,t} \sim \mathcal{N}(0,W_1)$$
 
-Then in the measurement equation, the coefficient for the state $\beta_t$ $(F_t)$ can be defined as the regressor itself $(x_t)$:
+--
 
-$$y_t = \beta_t x_t + v_t, \hspace{2em} v_t \sim \mathcal{N}(0,V)$$
-This has the benefit of allowing the regressor coefficient to evolve over time.
+## ARMA(ar, ma): ARMA processes
 
----
+Natural to add in state space models to correct for correlation structure remaining in the residuals.
 
-# ARMA(ar, ma): ARMA processes
+--
 
-Adding ARMA processes to state space models is a natural extension to correct remaining correlation structure in the residuals.
+## BoxCox transformations
 
-For ar $= (\phi_1, \ldots, \phi_p)$ and ma $= (\theta_1, \ldots, \theta_q)$, the appropriate states are given by:
-
-\begin{align*}
-\gamma_1,t &= \phi_1 \gamma_{1,t-1} + \gamma_{2, t-1} + \varepsilon_t\\
-\gamma_j,t &= \phi_j \gamma_{1,t-1} + \gamma_{j+1, t-1} + \theta_{j-1} \varepsilon_t, & \forall j = 1, \ldots, r-1\\
-\gamma_r,t &= \phi_r \gamma_{1,t-1} + \theta_{r-1} \varepsilon_t\\
-\end{align*}
-
-Where,
-\begin{align*}
-r &= max\{p, q+1\}\\
-\phi_j &= 0, \hspace{1em}\forall j>r\\
-\theta_j &= 0, \hspace{1em}\forall j>r-1\\
-\varepsilon_t &\sim \mathcal{N}(0, \sigma^2)
-\end{align*}
+Helps constain non-negativity conditions, normalise variation in the seasonality, and linearise the trend.
 
 ---
 
@@ -684,7 +641,7 @@ There are well over 100 parameters that require estimation.
 
 --
 
-.center[Numerical optimisation techniques involving the .bold[MLE is infeasible]!]
+.center[Numerical optimisation techniques involving the .bold[MLE are infeasible]!]
 
 ???
 
@@ -730,33 +687,36 @@ $$V = \text{Var}\left(v_t^{(s)}\right) = \text{Var}\left(y_t - F_t\theta_t^{(s)}
 
 ---
 
-class: inverse, center, top
+## Making FASSTER even *fasster*
 
-# Implementation
+### Problem: High frequency time-series tend to be long
 
-.animated.zoomIn.sticker-math[
-![fasster](resources/fasster.png)
-]
+This can make the two passes through the data fairly slow.
+
+--
+
+### Solution: Apply the heuristic on the tail of the time-series
+
+As a forecasting tool, optimising over the full length series is unnecessary.
+
+Only the tail of the series is necessary for producing good forecasts.
 
 ---
-
-class: inverse, center, top
+class: inverse, middle, center
 
 # Implementation
 
-.sticker-math[
-![fasster](resources/fasster.png)
-]
+---
+class: inverse, top
 
-.sticker-math[
-![dlm](resources/dlm.png)
-![tidyverse](resources/tidyverse.png)
-![forecast](resources/forecast.png)
-]
+.animated.zoomIn[.sticker-float[![fasster](resources/fasster.png)]
+<br>
+.center[
+# The fasster package for R
+]]
 
-???
-
-Special note that since my last presentation, we have made a sticker for the forecast package!
+<br>
+<br>
 
 ---
 class: inverse, top
@@ -793,7 +753,11 @@ SthCross_fasster_fit <- SthCross_Ex %>%
 
 ```{r}
 SthCross_fasster_fit %>%
-  ggfitted
+  ggfitted + 
+  scale_color_brewer(palette="Dark2", direction=-1) + 
+  ylab("Pedestrians counted") + 
+  ggtitle("Pedestrian Traffic at Southern Cross Station") +
+  xlab("Date")
 ```
 
 
@@ -808,16 +772,17 @@ elecdemand_Ex <- elecdemand_plot %>%
 
 ```{r, echo=TRUE, eval=FALSE}
 elecdemand_fasster_fit <- elecdemand_Ex %>%
-  fasster(Demand ~ I((Temperature - mean(Temperature))^2) + 
+  fasster(Demand ~ I(abs(Temperature - mean(Temperature))) + 
                    WorkDay %S% (poly(1) + trig(48, 16)))
 ```
 
 ```{r}
 elecdemand_fasster_fit <- elecdemand_Ex %>%
-  fasster(Demand ~ I((Temperature - mean(Temperature))^2) + 
+  fasster(Demand ~ I(abs(Temperature - mean(Temperature))) + 
                    WorkDay %S% (poly(1) + trig(48, 16)))
 elecdemand_fasster_fit %>% 
-  ggfitted
+  ggfitted + 
+  scale_color_brewer(palette="Dark2", direction=-1)
 ```
 
 ---
@@ -869,8 +834,6 @@ R for Data Science: suggested project workflow
 # Extends the forecast package
 
 **fasster** objects are consistent with the **forecast** package.
-
---
 
 Which provides:
 
@@ -938,11 +901,9 @@ The formula model specification for **fasster** is designed to be:
 .pull-left[
 - Concise
 - Convenient
-- Intuitive
 ]
 .pull-right[
-- Unsurprising
-- Unrestricted
+- Intuitive
 - Flexible
 ]
 
@@ -984,22 +945,284 @@ Complex models are simple to specify
 data %>% fasster(y ~ x1 + gV1 %S% (gV2 %S% poly(1) + trig(24)))
 ```
 
+---
+
+# Forecasts (Pedestrian counts)
+```{r}
+SthCross_ts <- pedestrian_cleaned$`Southern Cross Station` %>%
+    filter(DateTime > ymd("2017-02-20") & DateTime <= ymd("2017-03-06")) %>%
+    mutate(DayType = ifelse(is_weekend(DateTime), "Weekend", "Weekday"))
+fasster_ped_fc <- SthCross_Ex %>%
+  fasster(Hourly_Counts ~ DayType %S% (poly(1) + trig(24)), lambda=0.5) %>%
+  forecast(SthCross_ts)
+fasster_ped_fc$x <- fasster_ped_fc$x %>% ts(start = decimal_date(SthCross_Ex$DateTime %>% min),
+                                            frequency = 365.25*24)
+fasster_ped_fc$mean <- fasster_ped_fc$mean %>% 
+  ts(start = decimal_date(SthCross_ts$DateTime %>% min), frequency = 365.25*24)
+fasster_ped_fc %>%
+  autoplot() +
+  xlab("Date") +
+  ylab("Pedestrian Counts")
+```
 
 ---
-class: inverse, center, top
 
-# Applications and results
+# Forecasts (Electricity demand)
+
+```{r}
+elecdemand_fc <- elecdemand_plot %>%
+  filter(DateTime >= ymd("2014-07-10") & DateTime < ymd("2014-07-31")) %>%
+  fasster(Demand ~ I(abs(Temperature - mean(Temperature))) + 
+                   WorkDay %S% (poly(1) + trig(48, 16)), lambda = 0) %>% 
+  forecast(elecdemand_plot %>%
+           filter(DateTime >= ymd("2014-07-31") & DateTime < ymd("2014-08-14")))
+
+elecdemand_fc$x <- elecdemand_fc$x %>% ts(start = decimal_date(ymd("2014-07-10")), frequency = 17520)
+elecdemand_fc$mean <- elecdemand_fc$mean %>% 
+  ts(start = decimal_date(ymd("2014-07-31")), frequency = 17520)
+
+elecdemand_fc %>%
+  autoplot() +
+  xlab("Date") +
+  ylab("Pedestrian Counts")
+```
+
+
+---
+
+#### Regression models
+<table class="table">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Flexible</th>
+      <th>Speed</th>
+      <th>Accuracy</th>
+      <th>Exogenous Regressors</th>
+      <th>Decompose Components</th>
+      <th>Evolving Terms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MLR</td>
+      <td class="success">Yes</td>
+      <td class="success">Fast</td>
+      <td class="warning">Okay</td>
+      <td class="success">Yes</td>
+      <td class="danger">No</td>
+      <td class="danger">No</td>
+    </tr>
+    <tr>
+      <td>GAM</td>
+      <td class="success">Yes</td>
+      <td class="success">Fast</td>
+      <td class="warning">Okay</td>
+      <td class="success">Yes</td>
+      <td class="danger">No</td>
+      <td class="danger">No</td>
+    </tr>
+    <tr>
+      <td>&nbsp;&nbsp;&nbsp;Prophet&nbsp;&nbsp;&nbsp;&nbsp;</td>
+      <td class="warning">Partial</td>
+      <td class="warning">Moderate</td>
+      <td class="success">Good*</td>
+      <td class="danger">No</td>
+      <td class="success">Good</td>
+      <td class="danger">No</td>
+    </tr>
+  </tbody>
+</table>
+
+#### State space models
+<table class="table">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Flexible</th>
+      <th>Speed</th>
+      <th>Accuracy</th>
+      <th>Exogenous Regressors</th>
+      <th>Decompose Components</th>
+      <th>Evolving Terms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DSHW</td>
+      <td class="danger">No</td>
+      <td class="danger">Slow</td>
+      <td class="warning">Okay</td>
+      <td class="danger">No</td>
+      <td class="success">Yes</td>
+      <td class="success">Yes</td>
+    </tr>
+    <tr>
+      <td>BATS/TBATS</td>
+      <td class="danger">No</td>
+      <td class="danger">Slower*</td>
+      <td class="success">Good*</td>
+      <td class="danger">No</td>
+      <td class="success">Yes</td>
+      <td class="success">Yes</td>
+    </tr>
+    <tr>
+      <td>MSARIMA</td>
+      <td class="danger">No</td>
+      <td class="danger">Slowest</td>
+      <td class="danger">Poor</td>
+      <td class="success">Yes</td>
+      <td class="danger">No</td>
+      <td class="success">Yes</td>
+    </tr>
+    <tr>
+      <td><b>FASSTER</b></td>
+      <td class="success"><b>Yes</b></td>
+      <td class="warning"><i><b>fasster</b></i></td>
+      <td class="success"><b>Good*</b></td>
+      <td class="success"><b>Yes</b></td>
+      <td class="success"><b>Yes</b></td>
+      <td class="success"><b>Yes</b></td>
+    </tr>
+  </tbody>
+</table>
+
+.footnote[[*] This can substantially depend on the data]
 
 ---
 
 # Extensions
 
-- Automatic detection of groups / model
-- More flexible within-group model specification
-- Streaming data
-- Improved heuristic estimation
+- ## Improved heuristic estimation
+- ## Automatic detection of groups / model
+- ## More flexible within-group model specification
+- ## Streaming data
 
 ---
 class: inverse, center, top
 
 # Questions?
+
+---
+
+# seas(s): seasonal factors
+
+This creates seasonal factors with frequency s.
+
+Like other state space models (such as DSHW and BATS), seasonal factors are defined by rotating states.
+
+For identification, the seasonal states set to sum to 0, reducing the required states by 1.
+
+\begin{align*}
+s_{1,t} &= -\sum_{j=1}^m s_{j,t-1} + w_{1,t} & w_{1,t} &\sim \mathcal{N}(0,W_1)\\
+s_{j,t} &= s_{j-1, t-1} + w_{j,t}, & w_{j,t} &\sim \mathcal{N}(0,0) & \forall j = 2, ..., m-1
+\end{align*}
+---
+
+# trig(s, q): seasonal fourier terms
+
+This creates seasonal fourier terms with frequency s using q harmonics.
+(Where $q \leq \lfloor s/2 \rfloor$)
+
+As defined in TBATS, the underlying states for seasonal fourier terms are:
+
+\begin{align*}
+f_t &= \sum_{j=1}^{q} f_{j,t}\\
+f_{j,t} &= f_{j,t-1}\cos \lambda_j + f_{j,t-1}^{*}\sin \lambda_j + \gamma_1d_t\\
+f_{j,t}^{*} &= -f_{j,t-1}\sin \lambda_j + f_{j,t-1}^{*}\cos \lambda_j + \gamma_2d_t\\
+\end{align*}
+
+$$\text{Where }\lambda_j = \dfrac{2\pi j}{m}$$
+
+Trigonometric seasonality is advantageous as it is:
+
+- More flexible
+- Reduces parameterisation problem
+- Supports non-integer seasonal periods
+
+???
+
+This provides a more flexible specification of seasonality than seasonal factors, and reducing the number of harmonics can help speed up the model (with a trade off of smoother seasonality).
+
+---
+
+# poly(n): n-th order polynomials
+
+This creates levels, trends, and higher order polynomial states
+
+The state equation for a level $(\ell_t)$ in the model (poly(1)) is given by:
+\begin{align*}
+\ell_t &= \ell_{t-1} + w_{1,t}, & w_{1,t} &\sim \mathcal{N}(0,W_1)
+\end{align*}
+Extending this to include a trend state $(b_t)$ in the model (poly(2)) makes the state equations:
+
+\begin{align*}
+\ell_t &= \ell_{t-1} + b_{t-1} + w_{1,t}, & w_{1,t} &\sim \mathcal{N}(0,W_1)\\
+b_t &= b_{t-1} + w_{2,t}, & w_{2,t} &\sim \mathcal{N}(0,W_2)
+\end{align*}
+
+In general, the $n^{th}$ order polynomial (poly(n)) is built with the states:
+\begin{align*}
+\theta_{j,t} &= \theta_{j,t-1} + \theta_{j+1, t-1} + w_{j,t}, & w_{j,t} &\sim \mathcal{N}(0,W_j), &\forall j=1,\ldots,n-1\\
+\theta_{n,t} &= \theta_{n,t-1} + w_{n,t}, & w_{n,t} &\sim \mathcal{N}(0,W_n)
+\end{align*}
+
+---
+
+# xreg: Exogenous regressors
+
+Regression terms can be constructed by using a state to represent the regression coefficient for each regressor.
+$$\beta_t = \beta_{t-1} + w_{1,t}, \hspace{2em} w_{1,t} \sim \mathcal{N}(0,W_1)$$
+
+Then in the measurement equation, the coefficient for the state $\beta_t$ $(F_t)$ can be defined as the regressor itself $(x_t)$:
+
+$$y_t = \beta_t x_t + v_t, \hspace{2em} v_t \sim \mathcal{N}(0,V)$$
+This has the benefit of allowing the regressor coefficient to evolve over time.
+
+---
+
+# ARMA(ar, ma): ARMA processes
+
+Adding ARMA processes to state space models is a natural extension to correct remaining correlation structure in the residuals.
+
+For ar $= (\phi_1, \ldots, \phi_p)$ and ma $= (\theta_1, \ldots, \theta_q)$, the appropriate states are given by:
+
+\begin{align*}
+\gamma_1,t &= \phi_1 \gamma_{1,t-1} + \gamma_{2, t-1} + \varepsilon_t\\
+\gamma_j,t &= \phi_j \gamma_{1,t-1} + \gamma_{j+1, t-1} + \theta_{j-1} \varepsilon_t, & \forall j = 1, \ldots, r-1\\
+\gamma_r,t &= \phi_r \gamma_{1,t-1} + \theta_{r-1} \varepsilon_t\\
+\end{align*}
+
+Where,
+\begin{align*}
+r &= max\{p, q+1\}\\
+\phi_j &= 0, \hspace{1em}\forall j>r\\
+\theta_j &= 0, \hspace{1em}\forall j>r-1\\
+\varepsilon_t &\sim \mathcal{N}(0, \sigma^2)
+\end{align*}
+
+---
+
+# Electricity demand performance
+```{r}
+read_csv("elecdemand_times.csv") %>%
+  mutate(Model = reorder(Model, elapsed)) %>%
+  ggplot(aes(x=Model, y=elapsed)) +
+  geom_col() + 
+  ylab("Model estimation time (s)") + 
+  scale_y_sqrt()
+```
+
+---
+
+# Electricity demand performance
+
+```{r}
+read_csv("elecdemand_accuracy.csv") %>%
+  mutate(Model = reorder(Model, RMSE)) %>% 
+  gather(Measure, Value, RMSE, MAPE) %>%
+  ggplot(aes(x=Model, y=Value)) +
+  geom_col(position = position_dodge()) + 
+  ylab("Model accuracy") + 
+  facet_wrap(~ Measure, scales = "free_y")
+```
